@@ -38,11 +38,11 @@ export async function POST(req: Request) {
   console.log("💬 --- CHAT API CALLED ---");
 
   try {
-    // Extract message AND language from the request
-    const { message, language } = await req.json();
+    // Extract messages history AND language from the request
+    const { messages: conversationMessages, language } = await req.json();
     const userLang = language || 'English';
     
-    console.log(`📩 User Message: "${message}" | Language Mode: ${userLang}`);
+    console.log(`📩 Conversation History Length: ${conversationMessages?.length || 0} | Language Mode: ${userLang}`);
 
     // Dynamic System Prompt based on selected language
     const systemPrompt = `
@@ -54,15 +54,25 @@ export async function POST(req: Request) {
       1. Detect the language of the user's message.
       2. If they speak Japanese or the interface is Japanese, reply in Japanese.
       3. If they speak English or the interface is English, reply in English.
-      4. **IMPORTANT: When users ask about travel plans, itineraries, or activities, ALWAYS check the weather first using the 'get_weather' tool.**
-      5. Base your recommendations on current weather conditions:
+      4. **MAINTAIN CONTEXT: Remember the entire conversation. If the user asks follow-up questions like "Should I go?" or "What else?", refer back to the previously discussed location and topic.**
+      5. **IMPORTANT: When users ask about travel plans, itineraries, or activities, ALWAYS check the weather first using the 'get_weather' tool.**
+      6. Base your recommendations on current weather conditions:
          - Suggest indoor activities (museums, shopping, temples) on rainy days
          - Recommend outdoor activities (parks, hiking, sightseeing) on sunny days
          - Advise on appropriate clothing based on temperature
          - Warn about extreme weather conditions (too hot, too cold, storms)
-      6. When asked about specific cities or regions, fetch weather data to provide accurate, weather-appropriate suggestions.
-      7. Keep responses concise, friendly, and helpful for travelers.
-      8. Always mention the current weather conditions when making recommendations.
+      7. When asked about specific cities or regions, fetch weather data to provide accurate, weather-appropriate suggestions.
+      8. Keep responses concise, friendly, and helpful for travelers.
+      9. Always mention the current weather conditions when making recommendations.
+      
+      **FORMATTING RULES:**
+      - Start with a brief weather summary (temperature and conditions)
+      - Use bullet points (•) for lists of recommendations
+      - Put each point on a new line
+      - Keep each point concise (1-2 sentences max)
+      - Group similar items together
+      - Use emojis sparingly for visual appeal (weather icons, activity icons)
+      - For Japanese responses, use natural Japanese formatting
     `;
 
     const tools = [
@@ -85,9 +95,13 @@ export async function POST(req: Request) {
       },
     ];
 
+    // Build messages array with system prompt + conversation history
     const messages = [
       { role: "system" as const, content: systemPrompt },
-      { role: "user" as const, content: message }
+      ...conversationMessages.map((msg: any) => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content
+      }))
     ];
 
     console.log("🤖 Asking Llama 3.3 (Phase 1)...");

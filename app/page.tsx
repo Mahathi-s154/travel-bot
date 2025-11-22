@@ -41,7 +41,7 @@ const translations = {
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [language, setLanguage] = useState<Lang>('en'); 
+  const [language, setLanguage] = useState<Lang>('ja'); 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const t = translations[language];
@@ -73,15 +73,28 @@ export default function Home() {
     if (!text.trim()) return;
 
     const userMsg: Message = { role: 'user', content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setIsProcessing(true);
 
     try {
+      // Filter out the initial greeting and send conversation history
+      const conversationHistory = updatedMessages.filter((msg, idx) => {
+        // Skip the first message if it's just the greeting
+        if (idx === 0 && msg.role === 'assistant' && 
+            (msg.content === t.greeting || 
+             msg.content.includes("Hello! I'm your travel assistant") ||
+             msg.content.includes("こんにちは！旅行アシスタント"))) {
+          return false;
+        }
+        return true;
+      });
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          message: text, 
+          messages: conversationHistory,
           language: language === 'ja' ? 'Japanese' : 'English' 
         }),
       });
