@@ -18,7 +18,7 @@ export default function WeatherIcon({ condition, size = 20, inline = false }: We
         icon: Sun,
         color: 'text-yellow-500',
         animation: { rotate: 360 },
-        transition: { duration: 20, repeat: Infinity, ease: "linear" }
+        transition: { duration: 20, repeat: Infinity, ease: [0, 0, 1, 1] as any }
       };
     }
     
@@ -27,7 +27,7 @@ export default function WeatherIcon({ condition, size = 20, inline = false }: We
         icon: CloudRain,
         color: 'text-blue-500',
         animation: { y: [0, 2, 0] },
-        transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+        transition: { duration: 2, repeat: Infinity }
       };
     }
     
@@ -36,7 +36,7 @@ export default function WeatherIcon({ condition, size = 20, inline = false }: We
         icon: CloudSnow,
         color: 'text-cyan-400',
         animation: { y: [0, 3, 0] },
-        transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+        transition: { duration: 3, repeat: Infinity }
       };
     }
     
@@ -45,7 +45,7 @@ export default function WeatherIcon({ condition, size = 20, inline = false }: We
         icon: CloudLightning,
         color: 'text-purple-500',
         animation: { opacity: [1, 0.5, 1] },
-        transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+        transition: { duration: 1.5, repeat: Infinity }
       };
     }
     
@@ -54,7 +54,7 @@ export default function WeatherIcon({ condition, size = 20, inline = false }: We
         icon: CloudFog,
         color: 'text-slate-400',
         animation: { opacity: [0.8, 0.5, 0.8] },
-        transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+        transition: { duration: 3, repeat: Infinity }
       };
     }
     
@@ -63,7 +63,7 @@ export default function WeatherIcon({ condition, size = 20, inline = false }: We
         icon: Cloud,
         color: 'text-slate-500',
         animation: { x: [0, 2, 0] },
-        transition: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+        transition: { duration: 4, repeat: Infinity }
       };
     }
     
