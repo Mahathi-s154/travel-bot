@@ -6,7 +6,8 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 async function getWeatherData(city: string) {
   console.log(`🌍 Fetching weather for: ${city}`);
   const apiKey = process.env.OPENWEATHER_API_KEY;
-  const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=ja`;
+  // Removed '&lang=ja' so the AI gets raw data and translates it dynamically
+  const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
   
   try {
     const res = await fetch(url);
@@ -20,8 +21,12 @@ async function getWeatherData(city: string) {
     return JSON.stringify({
       location: data.name,
       temperature: data.main.temp,
+      feels_like: data.main.feels_like,
       description: data.weather[0].description,
       humidity: data.main.humidity,
+      wind_speed: data.wind.speed,
+      clouds: data.clouds.all,
+      visibility: data.visibility,
     });
   } catch (error) {
     console.error("❌ Weather Fetch Failed:", error);
@@ -33,19 +38,46 @@ export async function POST(req: Request) {
   console.log("💬 --- CHAT API CALLED ---");
 
   try {
-    const { message } = await req.json();
-    console.log("📩 User Message:", message);
+    // Extract message AND language from the request
+    const { message, language } = await req.json();
+    const userLang = language || 'English';
+    
+    console.log(`📩 User Message: "${message}" | Language Mode: ${userLang}`);
+
+    // Dynamic System Prompt based on selected language
+    const systemPrompt = `
+      You are a helpful travel assistant specializing in Japan travel planning.
+      
+      User Preference: The user's interface is set to ${userLang}.
+      
+      Instructions:
+      1. Detect the language of the user's message.
+      2. If they speak Japanese or the interface is Japanese, reply in Japanese.
+      3. If they speak English or the interface is English, reply in English.
+      4. **IMPORTANT: When users ask about travel plans, itineraries, or activities, ALWAYS check the weather first using the 'get_weather' tool.**
+      5. Base your recommendations on current weather conditions:
+         - Suggest indoor activities (museums, shopping, temples) on rainy days
+         - Recommend outdoor activities (parks, hiking, sightseeing) on sunny days
+         - Advise on appropriate clothing based on temperature
+         - Warn about extreme weather conditions (too hot, too cold, storms)
+      6. When asked about specific cities or regions, fetch weather data to provide accurate, weather-appropriate suggestions.
+      7. Keep responses concise, friendly, and helpful for travelers.
+      8. Always mention the current weather conditions when making recommendations.
+    `;
 
     const tools = [
       {
         type: "function" as const,
         function: {
           name: "get_weather",
-          description: "Get current weather for a specific city.",
+          description: "Get current weather for a specific city. Use this tool when users ask about travel plans, itineraries, activities, or explicitly mention a city. Weather data should inform your recommendations.",
           parameters: {
             type: "object",
             properties: {
-              city: { type: "string", description: "City name" },
+              city: { 
+                type: "string", 
+                description: "City name (e.g., Tokyo, Kyoto, Osaka)" 
+              },
             },
             required: ["city"],
           },
@@ -54,7 +86,7 @@ export async function POST(req: Request) {
     ];
 
     const messages = [
-      { role: "system" as const, content: "You are a helpful Japanese travel assistant." },
+      { role: "system" as const, content: systemPrompt },
       { role: "user" as const, content: message }
     ];
 
@@ -82,10 +114,10 @@ export async function POST(req: Request) {
         
         newMessages.push({
           tool_call_id: toolCall.id,
-          role: "tool" as const,
+          role: "tool",
           name: "get_weather",
           content: weatherResult || "Error fetching weather.",
-        });
+        } as any);
       }
 
       console.log("🤖 Asking Llama 3.3 (Phase 2 - With Data)...");
