@@ -279,7 +279,7 @@ graph TB
     end
     
     subgraph "Next.js App Router"
-        D[page.tsx<br/>Main UI]
+        D["page.tsx<br/>Main UI"]
         E[ChatInputArea]
         F[ChatMessage]
         G[LoadingIndicator]
@@ -287,24 +287,24 @@ graph TB
     end
     
     subgraph "API Routes"
-        I[/api/chat<br/>Chat Endpoint]
-        J[/api/transcribe<br/>Speech-to-Text]
+        I["/api/chat<br/>Chat Endpoint"]
+        J["/api/transcribe<br/>Speech-to-Text"]
     end
     
     subgraph "AI & LLM Layer"
         K[Groq SDK]
-        L[Llama 3.3 70B<br/>Versatile Model]
+        L["Llama 3.3 70B<br/>Versatile Model"]
         M[Tool Calling System]
     end
     
     subgraph "External APIs"
-        N[OpenWeather API<br/>Weather Data]
+        N["OpenWeather API<br/>Weather Data"]
         O[Speech Recognition API]
     end
     
     subgraph "Data Flow"
-        P[Weather Tool<br/>Function]
-        Q[Context Manager<br/>Conversation History]
+        P["Weather Tool<br/>Function"]
+        Q["Context Manager<br/>Conversation History"]
     end
     
     A -->|User Input| B
@@ -351,23 +351,23 @@ sequenceDiagram
     participant Weather as OpenWeather API
     
     U->>UI: Enter question about Kyoto
-    UI->>API: POST /api/chat<br/>{messages, language}
+    UI->>API: "POST /api/chat<br/>{messages, language}"
     
     API->>LLM: System Prompt + User Query
-    LLM->>LLM: Analyze query<br/>(needs weather?)
+    LLM->>LLM: "Analyze query<br/>(needs weather?)"
     
     alt Weather Tool Called
-        LLM->>API: Tool Call: get_weather("Kyoto")
+        LLM->>API: "Tool Call: get_weather(\"Kyoto\")"
         API->>Weather: GET /weather?q=Kyoto
-        Weather-->>API: Weather JSON<br/>{temp, condition, etc}
-        API->>LLM: Tool Response<br/>(weather data)
-        LLM->>LLM: Generate response<br/>based on weather
+        Weather-->>API: "Weather JSON<br/>{temp, condition, etc}"
+        API->>LLM: "Tool Response<br/>(weather data)"
+        LLM->>LLM: "Generate response<br/>based on weather"
     end
     
     LLM-->>API: Final AI Response
-    API-->>UI: JSON {reply, weatherFetched}
-    UI->>UI: Update Background<br/>(weather theme)
-    UI-->>U: Display AI Message<br/>(with typing effect)
+    API-->>UI: "JSON {reply, weatherFetched}"
+    UI->>UI: "Update Background<br/>(weather theme)"
+    UI-->>U: "Display AI Message<br/>(with typing effect)"
 ```
 
 ## 🎨 Component Architecture
@@ -389,11 +389,11 @@ graph LR
     end
     
     subgraph "State Management"
-        I[messages: Message[]]
-        J[isProcessing: boolean]
-        K[loadingPhase: string]
-        L[weatherCondition: string]
-        M[language: 'en' | 'ja']
+        I["messages: Message[]"]
+        J["isProcessing: boolean"]
+        K["loadingPhase: string"]
+        L["weatherCondition: string"]
+        M["language: 'en' | 'ja'"]
     end
     
     A --> B
