@@ -3,7 +3,9 @@
 import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import ChatMessage from './components/ChatMessage';
-import { Plane, Languages, Map } from 'lucide-react';
+import LoadingIndicator from './components/LoadingIndicator';
+import SuggestedQuestions from './components/SuggestedQuestions';
+import { Plane, Languages } from 'lucide-react';
 
 // Dynamic import for the input component
 const ChatInputArea = dynamic(() => import('./components/ChatInputArea'), { ssr: false });
@@ -41,6 +43,9 @@ const translations = {
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState<'weather' | 'analyzing' | 'generating' | null>(null);
+  const [typingMessageIndex, setTypingMessageIndex] = useState<number | null>(null);
+  const [weatherCondition, setWeatherCondition] = useState<string | null>(null);
   const [language, setLanguage] = useState<Lang>('ja'); 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -69,6 +74,19 @@ export default function Home() {
     setLanguage(prev => (prev === 'en' ? 'ja' : 'en'));
   };
 
+  // Determine background class based on weather
+  const getWeatherBackground = () => {
+    if (!weatherCondition) return 'bg-weather-default';
+    const lower = weatherCondition.toLowerCase();
+    if (lower.includes('clear') || lower.includes('sunny')) return 'bg-weather-clear';
+    if (lower.includes('cloud')) return 'bg-weather-clouds';
+    if (lower.includes('rain') || lower.includes('drizzle')) return 'bg-weather-rain';
+    if (lower.includes('snow')) return 'bg-weather-snow';
+    if (lower.includes('thunder') || lower.includes('storm')) return 'bg-weather-thunderstorm';
+    if (lower.includes('mist') || lower.includes('fog')) return 'bg-weather-mist';
+    return 'bg-weather-default';
+  };
+
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
 
@@ -90,6 +108,9 @@ export default function Home() {
         return true;
       });
 
+      // Start with weather phase for queries that might need weather
+      setLoadingPhase('weather');
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,39 +122,61 @@ export default function Home() {
       
       const data = await response.json();
 
+      // Transition through phases based on whether weather was fetched
+      if (data.weatherFetched) {
+        setLoadingPhase('analyzing');
+        // Update weather condition for dynamic background
+        if (data.weather && data.weather.condition) {
+           setWeatherCondition(data.weather.condition);
+        }
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+      
+      setLoadingPhase('generating');
+      await new Promise(resolve => setTimeout(resolve, 600));
+
       if (data.reply) {
-        setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
+        setMessages((prev) => {
+          const newMessages: Message[] = [...prev, { role: 'assistant' as const, content: data.reply }];
+          setTypingMessageIndex(newMessages.length - 1);
+          return newMessages;
+        });
       }
     } catch (error) {
       console.error("Chat error:", error);
       setMessages((prev) => [...prev, { role: 'assistant', content: t.error }]);
     } finally {
       setIsProcessing(false);
+      setLoadingPhase(null);
     }
   };
 
+  const handleTypingComplete = () => {
+    setTypingMessageIndex(null);
+  };
+
   return (
-    // Set main background to slate-50 (off-white) for a clean look outside the mobile frame
-    <div className="flex justify-center min-h-screen bg-slate-50 font-sans">
+    // Set main background with dynamic weather class
+    <div className={`flex justify-center min-h-screen font-sans transition-colors duration-1000 ${getWeatherBackground()}`}>
       
       {/* Main App Container */}
-      <main className="w-full max-w-[480px] bg-white h-[100dvh] flex flex-col relative shadow-xl overflow-hidden sm:rounded-[30px] sm:my-8 sm:h-[calc(100vh-64px)] sm:border border-slate-200">
+      <main className="w-full max-w-[480px] bg-white/95 backdrop-blur-lg h-[100dvh] flex flex-col relative shadow-2xl overflow-hidden sm:rounded-[30px] sm:my-8 sm:h-[calc(100vh-64px)] sm:border border-white/20">
         
-        {/* Header */}
-        <header className="px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 z-20 flex items-center justify-between sticky top-0">
+        {/* Header with Gradient */}
+        <header className="px-6 py-4 glass border-b border-white/30 z-20 flex items-center justify-between sticky top-0">
           <div className="flex items-center gap-3">
-            <div className="bg-slate-900 p-2 rounded-xl shadow-lg shadow-slate-200">
+            <div className="gradient-primary p-2 rounded-xl shadow-lg">
               <Plane size={20} className="text-white" />
             </div>
             <div>
               <h1 className="font-bold text-lg leading-tight text-slate-900">{t.title}</h1>
-              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-widest">{t.subtitle}</p>
+              <p className="text-[11px] font-medium text-slate-500 uppercase tracking-widest">{t.subtitle}</p>
             </div>
           </div>
           
           <button 
             onClick={toggleLanguage}
-            className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full transition-all text-xs font-semibold text-slate-700 active:scale-95"
+            className="flex items-center gap-2 px-3 py-1.5 glass hover:glass-dark hover:text-white border border-white/40 rounded-full transition-all text-xs font-semibold text-slate-700 active:scale-95 shadow-sm"
           >
             <Languages size={14} />
             {language === 'en' ? 'EN' : 'JP'}
@@ -160,25 +203,33 @@ export default function Home() {
           )}
 
           {messages.map((msg, idx) => (
-            <ChatMessage key={idx} role={msg.role} content={msg.content} />
+            <ChatMessage 
+              key={idx} 
+              role={msg.role} 
+              content={msg.content}
+              isTyping={idx === typingMessageIndex}
+              onTypingComplete={handleTypingComplete}
+            />
           ))}
           
-          {/* Loading Indicator */}
-          {isProcessing && (
-             <div className="flex gap-3 animate-in fade-in duration-300">
-                <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                   <Map size={16} className="text-slate-400 animate-pulse" />
-                </div>
-                <div className="bg-slate-50 px-4 py-3 rounded-2xl rounded-tl-sm text-sm text-slate-500 border border-slate-100">
-                   {t.thinking}
-                </div>
-             </div>
+          {/* Loading Indicator with Phases */}
+          {isProcessing && loadingPhase && (
+            <LoadingIndicator phase={loadingPhase} language={language} />
           )}
           <div className="h-4" ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
-        <div className="sticky bottom-0 z-30 bg-white">
+        <div className="sticky bottom-0 z-30 bg-white/80 backdrop-blur-md">
+           {/* Suggested Questions */}
+           {!isProcessing && messages.length > 0 && (
+             <SuggestedQuestions 
+               onSelect={handleSendMessage} 
+               language={language} 
+               disabled={isProcessing}
+             />
+           )}
+           
            <ChatInputArea 
               onSendMessage={handleSendMessage} 
               isProcessing={isProcessing} 

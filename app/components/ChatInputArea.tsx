@@ -98,7 +98,7 @@ export default function ChatInputArea({ onSendMessage, isProcessing, language }:
   const isDisabled = isProcessing || isTranscribing;
 
   return (
-    <div className="w-full bg-white/90 backdrop-blur-md border-t border-slate-100 p-4 pb-6 shadow-lg">
+    <div className="w-full glass border-t border-white/40 p-4 pb-6 shadow-xl">
       
       {/* Floating Status Badge (Listening/Transcribing) */}
       <AnimatePresence>
@@ -109,7 +109,7 @@ export default function ChatInputArea({ onSendMessage, isProcessing, language }:
             exit={{ opacity: 0 }}
             className="absolute -top-8 left-0 w-full flex justify-center pointer-events-none"
           >
-            <span className="bg-slate-900 text-white text-xs font-medium px-3 py-1 rounded-full shadow-xl flex items-center gap-2">
+            <span className="glass-dark text-white text-xs font-medium px-3 py-1 rounded-full shadow-xl flex items-center gap-2">
               {isRecording && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
               {isRecording ? t.listening : t.transcribing}
             </span>
@@ -120,7 +120,7 @@ export default function ChatInputArea({ onSendMessage, isProcessing, language }:
       {/* Input Bar */}
       <div className="flex items-center gap-2 max-w-[480px] mx-auto">
         
-        {/* Text Input Field */}
+        {/* Text Input Field with Glassmorphism */}
         <input
           type="text"
           value={text}
@@ -128,29 +128,33 @@ export default function ChatInputArea({ onSendMessage, isProcessing, language }:
           onKeyDown={handleKeyDown}
           placeholder={isRecording ? "" : t.placeholder}
           disabled={isDisabled || isRecording}
-          className="flex-1 bg-slate-100 border border-transparent focus:border-slate-300 rounded-2xl px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100 transition-all disabled:opacity-50"
+          className="flex-1 glass border border-white/40 focus:border-purple-300 rounded-2xl px-4 py-3 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:glow-purple transition-all disabled:opacity-50"
         />
 
         {/* Dynamic Button: Shows SEND if typing, MIC if empty */}
         {text.trim() ? (
-          <button
+          <motion.button
             onClick={handleSendText}
             disabled={isDisabled}
-            className="w-12 h-12 flex items-center justify-center bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-50"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-12 h-12 flex items-center justify-center gradient-primary text-white rounded-full shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
           >
             {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
-          </button>
+          </motion.button>
         ) : (
-          <button
+          <motion.button
             onClick={isRecording ? stopRecording : startRecording}
             disabled={isDisabled}
-            className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 shadow-sm
-              ${isRecording ? 'bg-red-500 text-white shadow-red-200 shadow-lg scale-110' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}
+            whileHover={{ scale: isDisabled ? 1 : 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 shadow-md
+              ${isRecording ? 'bg-red-500 text-white shadow-red-300 shadow-xl scale-110' : 'glass border border-white/40 text-slate-700 hover:border-purple-300'}
               ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}
           >
             {isRecording ? <Square size={18} fill="currentColor" /> : <Mic size={22} />}
-          </button>
+          </motion.button>
         )}
 
       </div>

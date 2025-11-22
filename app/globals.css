@@ -9,7 +9,7 @@
 
 /* Basic Reset for the App */
 body {
-  background-color: #f8fafc; /* Very light slate background for desktop */
+  background-color: #f8fafc; /* Clean light background */
   color: #0f172a;
   -webkit-font-smoothing: antialiased;
 }
@@ -21,4 +21,85 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Weather Backgrounds */
+.bg-weather-clear {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.bg-weather-clouds {
+  background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
+}
+
+.bg-weather-rain {
+  background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+}
+
+.bg-weather-snow {
+  background: linear-gradient(135deg, #83a4d4 0%, #b6fbff 100%);
+}
+
+.bg-weather-thunderstorm {
+  background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+}
+
+.bg-weather-mist {
+  background: linear-gradient(135deg, #606c88 0%, #3f4c6b 100%);
+}
+
+.bg-weather-default {
+  background-color: #f8fafc;
+}
+
+.gradient-sky {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.gradient-sunset {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.gradient-success {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animated Gradient Background */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animated-gradient {
+  background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+/* Glow effect for focus states */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(79, 172, 254, 0.4);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px rgba(118, 75, 162, 0.4);
 }

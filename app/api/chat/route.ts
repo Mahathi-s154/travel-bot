@@ -13,24 +13,32 @@ async function getWeatherData(city: string) {
     const res = await fetch(url);
     if (!res.ok) {
       console.error(`❌ Weather API Error: ${res.status} ${res.statusText}`);
-      return null;
+      return { success: false, data: null };
     }
     const data = await res.json();
     console.log("✅ Weather Data Received:", data.weather[0].description, data.main.temp);
     
-    return JSON.stringify({
-      location: data.name,
-      temperature: data.main.temp,
-      feels_like: data.main.feels_like,
-      description: data.weather[0].description,
-      humidity: data.main.humidity,
-      wind_speed: data.wind.speed,
-      clouds: data.clouds.all,
-      visibility: data.visibility,
-    });
+    return {
+      success: true,
+      data: JSON.stringify({
+        location: data.name,
+        temperature: data.main.temp,
+        feels_like: data.main.feels_like,
+        description: data.weather[0].description,
+        humidity: data.main.humidity,
+        wind_speed: data.wind.speed,
+        clouds: data.clouds.all,
+        visibility: data.visibility,
+      }),
+      metadata: {
+        city: data.name,
+        condition: data.weather[0].description,
+        temp: data.main.temp
+      }
+    };
   } catch (error) {
     console.error("❌ Weather Fetch Failed:", error);
-    return null;
+    return { success: false, data: null };
   }
 }
 
@@ -67,6 +75,8 @@ export async function POST(req: Request) {
       
       **FORMATTING RULES:**
       - Start with a brief weather summary (temperature and conditions)
+      - Use **bold text** for key places, activities, or important warnings
+      - Use ### Headers for main sections (e.g., ### Recommendations, ### Clothing)
       - Use bullet points (•) for lists of recommendations
       - Put each point on a new line
       - Keep each point concise (1-2 sentences max)
@@ -119,6 +129,7 @@ export async function POST(req: Request) {
       console.log("🔧 Tool Call Detected:", toolCalls[0].function.name);
       
       const newMessages = [...messages, responseMessage];
+      let weatherMetadata = null;
 
       for (const toolCall of toolCalls) {
         const functionArgs = JSON.parse(toolCall.function.arguments);
@@ -126,11 +137,15 @@ export async function POST(req: Request) {
         
         const weatherResult = await getWeatherData(functionArgs.city);
         
+        if (weatherResult.success) {
+          weatherMetadata = weatherResult.metadata;
+        }
+        
         newMessages.push({
           tool_call_id: toolCall.id,
           role: "tool",
           name: "get_weather",
-          content: weatherResult || "Error fetching weather.",
+          content: weatherResult.data || "Error fetching weather.",
         } as any);
       }
 
@@ -141,11 +156,18 @@ export async function POST(req: Request) {
       });
 
       console.log("✅ Final Response:", secondResponse.choices[0].message.content);
-      return NextResponse.json({ reply: secondResponse.choices[0].message.content });
+      return NextResponse.json({ 
+        reply: secondResponse.choices[0].message.content,
+        weatherFetched: true,
+        weather: weatherMetadata
+      });
     }
 
     console.log("✅ Direct Response (No Tool):", responseMessage.content);
-    return NextResponse.json({ reply: responseMessage.content });
+    return NextResponse.json({ 
+      reply: responseMessage.content,
+      weatherFetched: false
+    });
 
   } catch (error: any) {
     console.error("🔥 CHAT API FAILED 🔥", error);
