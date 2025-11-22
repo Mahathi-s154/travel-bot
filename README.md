@@ -1,5 +1,8 @@
 # 🛫 Jini - AI Travel Assistant for Japan
 
+[![GitHub Repository](https://img.shields.io/badge/GitHub-travel--bot-blue?logo=github)](https://github.com/Mahathi-s154/travel-bot)
+[![Live Demo](https://img.shields.io/badge/Demo-travel--bot--alpha.vercel.app-green?logo=vercel)](https://travel-bot-alpha.vercel.app)
+
 ---
 
 ## 📖 日本語
@@ -43,7 +46,7 @@
 1. **リポジトリのクローン**
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Mahathi-s154/travel-bot.git
 cd travel-bot
 ```
 
@@ -176,7 +179,7 @@ MIT License
 1. **Clone the repository**
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Mahathi-s154/travel-bot.git
 cd travel-bot
 ```
 
